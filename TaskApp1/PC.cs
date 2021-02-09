@@ -9,7 +9,7 @@ namespace TaskApp1
     {
         private ConcurrentQueue<T> _queue = new ConcurrentQueue<T>();
 
-        public int Length => _queue.Count;
+        public int Length => _queue?.Count ?? 0;
 
         public Task Produce(T element, Action<T> onCompleted)
         {
@@ -28,17 +28,16 @@ namespace TaskApp1
         private void Add(T element, Action<T> onCompleted)
         {
             _queue.Enqueue(element);
-            if (onCompleted != null) onCompleted(element);
+            onCompleted?.Invoke(element);
         }
 
         private void Remove(Action<T> onCompleted)
         {
             _queue.TryDequeue(out T el);
 
-            if (el == null)
-                Trace.WriteLine($"Consume is idle...");
-            else
-                if (onCompleted != null) onCompleted(el);
+            var f = (el == null ? 
+                delegate { Trace.WriteLine($"Consume is idle..."); } : onCompleted);
+            f?.Invoke(el);
         }
 
         public void Dispose() => _queue.Clear();
